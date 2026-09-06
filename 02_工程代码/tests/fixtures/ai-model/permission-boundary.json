@@ -1,0 +1,36 @@
+{
+  "project": {
+    "id": "project-authorized-scope-001",
+    "name": "回响授权范围项目样本",
+    "healthScore": 82,
+    "healthStatus": "needs-attention",
+    "sensitivityMode": "strict",
+    "riskLevel": "L2"
+  },
+  "tasks": [
+    {
+      "id": "task-authorized-001",
+      "name": "查看授权范围内任务",
+      "owner": "成员甲",
+      "status": "进行中",
+      "deadline": "2026-09-05",
+      "riskLevel": "L2",
+      "isOverdue": false,
+      "dependencyIds": [],
+      "description": "该任务属于当前用户已授权的项目范围。"
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "DEADLINE_NEAR",
+      "level": "L2",
+      "taskId": "task-authorized-001",
+      "evidence": "授权范围内任务的截止日期临近，需要持续观察。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

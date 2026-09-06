@@ -1,0 +1,36 @@
+{
+  "project": {
+    "id": "project-delay-001",
+    "name": "回响延期项目样本",
+    "healthScore": 62,
+    "healthStatus": "needs-attention",
+    "sensitivityMode": "robust",
+    "riskLevel": "L3"
+  },
+  "tasks": [
+    {
+      "id": "task-delay-001",
+      "name": "完成数据读取验证",
+      "owner": "成员乙",
+      "status": "进行中",
+      "deadline": "2026-08-15",
+      "riskLevel": "L3",
+      "isOverdue": true,
+      "dependencyIds": [],
+      "description": "完成 Base、Table、Record 的读取验证。"
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "TASK_OVERDUE",
+      "level": "L3",
+      "taskId": "task-delay-001",
+      "evidence": "任务仍为进行中，截止日期为 2026-08-15，当前已超过截止日期。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

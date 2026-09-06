@@ -1,0 +1,9 @@
+# Local environment files (never commit secrets)
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+dist/
+backend/.runtime/
+

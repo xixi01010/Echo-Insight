@@ -1,0 +1,36 @@
+{
+  "project": {
+    "id": "project-blocked-001",
+    "name": "回响阻塞项目样本",
+    "healthScore": 45,
+    "healthStatus": "at-risk",
+    "sensitivityMode": "robust",
+    "riskLevel": "L4"
+  },
+  "tasks": [
+    {
+      "id": "task-blocked-001",
+      "name": "完成飞书权限确认",
+      "owner": "成员丙",
+      "status": "阻塞",
+      "deadline": "2026-08-28",
+      "riskLevel": "L4",
+      "isOverdue": false,
+      "dependencyIds": [],
+      "description": "等待只读权限确认后继续验证。"
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "TASK_BLOCKED",
+      "level": "L4",
+      "taskId": "task-blocked-001",
+      "evidence": "任务状态为阻塞，后续读取验证无法继续。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

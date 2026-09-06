@@ -1,0 +1,47 @@
+{
+  "project": {
+    "id": "project-dependency-001",
+    "name": "回响依赖风险项目样本",
+    "healthScore": 58,
+    "healthStatus": "needs-attention",
+    "sensitivityMode": "robust",
+    "riskLevel": "L4"
+  },
+  "tasks": [
+    {
+      "id": "task-dependency-001",
+      "name": "完成权限验证",
+      "owner": "成员丁",
+      "status": "阻塞",
+      "deadline": "2026-08-25",
+      "riskLevel": "L4",
+      "isOverdue": false,
+      "dependencyIds": [],
+      "description": "前置权限验证尚未完成。"
+    },
+    {
+      "id": "task-dependency-002",
+      "name": "执行真实读取测试",
+      "owner": "成员戊",
+      "status": "未开始",
+      "deadline": "2026-08-27",
+      "riskLevel": "L3",
+      "isOverdue": false,
+      "dependencyIds": ["task-dependency-001"],
+      "description": "依赖权限验证完成后才能执行。"
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "DEPENDENCY_BLOCKED",
+      "level": "L4",
+      "taskId": "task-dependency-002",
+      "evidence": "任务依赖 task-dependency-001，而前置任务当前处于阻塞状态。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

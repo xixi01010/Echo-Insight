@@ -1,0 +1,59 @@
+{
+  "project": {
+    "id": "project-multi-risk-001",
+    "name": "回响多风险项目样本",
+    "healthScore": 38,
+    "healthStatus": "at-risk",
+    "sensitivityMode": "robust",
+    "riskLevel": "L5"
+  },
+  "tasks": [
+    {
+      "id": "task-multi-risk-001",
+      "name": "完成数据权限配置",
+      "owner": "成员己",
+      "status": "阻塞",
+      "deadline": "2026-08-20",
+      "riskLevel": "L5",
+      "isOverdue": true,
+      "dependencyIds": [],
+      "description": "权限未完成，读取链路无法验证。"
+    },
+    {
+      "id": "task-multi-risk-002",
+      "name": "生成风险报告",
+      "owner": "成员庚",
+      "status": "未开始",
+      "deadline": "2026-08-23",
+      "riskLevel": "L4",
+      "isOverdue": false,
+      "dependencyIds": ["task-multi-risk-001"],
+      "description": "等待数据读取和结构化结果。"
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "TASK_BLOCKED",
+      "level": "L5",
+      "taskId": "task-multi-risk-001",
+      "evidence": "关键权限任务处于阻塞状态。"
+    },
+    {
+      "code": "TASK_OVERDUE",
+      "level": "L4",
+      "taskId": "task-multi-risk-001",
+      "evidence": "关键权限任务已超过 2026-08-20 截止日期。"
+    },
+    {
+      "code": "DEPENDENCY_BLOCKED",
+      "level": "L4",
+      "taskId": "task-multi-risk-002",
+      "evidence": "风险报告任务依赖仍处于阻塞状态的权限任务。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

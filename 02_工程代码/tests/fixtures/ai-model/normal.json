@@ -1,0 +1,28 @@
+{
+  "project": {
+    "id": "project-normal-001",
+    "name": "回响正常项目样本",
+    "healthScore": 96,
+    "healthStatus": "healthy",
+    "sensitivityMode": "robust"
+  },
+  "tasks": [
+    {
+      "id": "task-normal-001",
+      "name": "完成产品演示稿",
+      "owner": "成员甲",
+      "status": "已完成",
+      "deadline": "2026-09-10",
+      "riskLevel": "L1",
+      "isOverdue": false,
+      "dependencyIds": [],
+      "description": "完成并确认演示稿内容。"
+    }
+  ],
+  "riskSignals": [],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}

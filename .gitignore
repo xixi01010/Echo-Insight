@@ -1,0 +1,62 @@
+# Local environment files and credentials (never commit)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/*secret*
+**/*token*
+**/*password*
+**/*credential*
+!02_工程代码/backend/src/current-user/feishu-user-credential-provider.ts
+!02_工程代码/tests/user-credential-lifecycle.test.ts
+**/*api[_-]key*
+**/*private[_-]key*
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.key
+
+# Dependencies and generated output
+**/node_modules/
+**/.venv/
+**/dist/
+**/coverage/
+**/.cache/
+**/.vite/
+**/.runtime/
+*.log
+
+# Private local resources and process material
+/03_资源文件/
+/04_过程记录/
+
+# Public-repository boundary (tracked private files still require index/history cleanup)
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/README.en.md
+!/LICENSE
+!/LICENSE-DOCS.md
+!/THIRD_PARTY_NOTICES.md
+!/TRADEMARKS.md
+!/setup-local.cmd
+!/setup-local.ps1
+!/setup-local.sh
+!/00_项目控制台/
+!/01_项目文档/
+!/02_工程代码/
+
+# Only the public navigation, risk rules, and AI output protocol are publishable docs
+/01_项目文档/*
+!/01_项目文档/Echo Insight项目文档导航索引.md
+!/01_项目文档/02_技术设计/
+/01_项目文档/02_技术设计/*
+!/01_项目文档/02_技术设计/04_风险规则引擎/
+/01_项目文档/02_技术设计/04_风险规则引擎/*
+!/01_项目文档/02_技术设计/04_风险规则引擎/项目健康评分规则引擎设计.md
+!/01_项目文档/02_技术设计/05_AI架构与输出协议/
+/01_项目文档/02_技术设计/05_AI架构与输出协议/*
+!/01_项目文档/02_技术设计/05_AI架构与输出协议/AI输出协议V2设计.md

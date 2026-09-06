@@ -1,0 +1,36 @@
+{
+  "project": {
+    "id": "project-missing-001",
+    "name": "回响缺失数据项目样本",
+    "healthScore": 70,
+    "healthStatus": "needs-attention",
+    "sensitivityMode": "strict",
+    "riskLevel": "L2"
+  },
+  "tasks": [
+    {
+      "id": "task-missing-001",
+      "name": "整理测试数据",
+      "owner": null,
+      "status": "进行中",
+      "deadline": null,
+      "riskLevel": null,
+      "isOverdue": false,
+      "dependencyIds": [],
+      "description": null
+    }
+  ],
+  "riskSignals": [
+    {
+      "code": "MISSING_PROJECT_DATA",
+      "level": "L2",
+      "taskId": "task-missing-001",
+      "evidence": "负责人、截止日期、任务风险等级和说明字段缺失。"
+    }
+  ],
+  "metadata": {
+    "source": "feishu-base",
+    "accessMode": "read-only",
+    "generatedAt": "2026-08-22T00:00:00.000Z"
+  }
+}
