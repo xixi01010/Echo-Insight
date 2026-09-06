@@ -42,12 +42,16 @@ const DEFAULT_PREFERENCES: Preferences = {
 
 const PreferenceContext = createContext<PreferenceContextValue | null>(null);
 
-export function PreferenceProvider({ children }: PropsWithChildren) {
-  const [preferences, setPreferences] = useState<Preferences>(readPreferences);
+interface PreferenceProviderProps extends PropsWithChildren {
+  storageKey?: string;
+}
+
+export function PreferenceProvider({ children, storageKey = STORAGE_KEY }: PreferenceProviderProps) {
+  const [preferences, setPreferences] = useState<Preferences>(() => readPreferences(storageKey));
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-  }, [preferences]);
+    window.localStorage.setItem(storageKey, JSON.stringify(preferences));
+  }, [preferences, storageKey]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -89,9 +93,9 @@ export function usePreferences(): PreferenceContextValue {
   return context;
 }
 
-function readPreferences(): Preferences {
+function readPreferences(storageKey: string): Preferences {
   try {
-    const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}") as Partial<Preferences>;
+    const stored = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}") as Partial<Preferences>;
     return {
       appearance: isOneOf(stored.appearance, ["light", "dark", "system"]) ? stored.appearance : DEFAULT_PREFERENCES.appearance,
       accent: isOneOf(stored.accent, ["echo", "indigo", "cyan", "purple", "green"]) ? stored.accent : DEFAULT_PREFERENCES.accent,

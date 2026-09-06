@@ -1,17 +1,17 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { INTERACTIVE_SURFACE_CLASS } from "../../animations/interactive-surface";
 import { PageHeader } from "../../components/PageHeader";
 import { useProjects } from "../../features/projects/ProjectContext";
+import { useWorkspaceRuntime } from "../../features/workspace/WorkspaceRuntimeContext";
 import {
   getCreateProjectErrorMessage,
   normalizeProjectNameInput,
   PROJECT_NAME_MAX_LENGTH,
 } from "../../features/projects/project-creation";
-import { ProjectApiClient } from "../../services/api";
 
 export function CreateProjectPage() {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const client = useWorkspaceRuntime().projectClient;
   const navigate = useNavigate();
   const { refreshProjects } = useProjects();
   const [name, setName] = useState("");

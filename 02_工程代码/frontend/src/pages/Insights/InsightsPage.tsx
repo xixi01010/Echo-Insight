@@ -13,23 +13,22 @@ import {
 } from "../../features/project-report/presentation";
 import { formatFactDisplay } from "../../features/product-language/presentation";
 import {
-  GlobalInsightsApiClient,
   GlobalInsightsApiError,
   type GlobalInsightSynthesisResponse,
   type GlobalInsightsResponse,
 } from "../../services/api";
-import { globalSynthesisSession } from "../../features/global-insights/synthesis-session";
+import { useWorkspaceRuntime } from "../../features/workspace/WorkspaceRuntimeContext";
 
 type InsightsStatus = "loading" | "success" | "error";
 type SynthesisStatus = "loading" | "success" | "error";
 
 export function InsightsPage() {
-  const client = useMemo(() => new GlobalInsightsApiClient(), []);
-  const initialInsights = globalSynthesisSession.readInsights();
+  const { globalInsightsClient: client, synthesisSession } = useWorkspaceRuntime();
+  const initialInsights = synthesisSession.readInsights();
   const [status, setStatus] = useState<InsightsStatus>(initialInsights ? "success" : "loading");
   const [result, setResult] = useState<GlobalInsightsResponse | null>(initialInsights);
   const [error, setError] = useState<string | null>(null);
-  const initialSynthesis = globalSynthesisSession.read();
+  const initialSynthesis = synthesisSession.read();
   const [synthesisStatus, setSynthesisStatus] = useState<SynthesisStatus>(initialSynthesis ? "success" : "loading");
   const [synthesis, setSynthesis] = useState<GlobalInsightSynthesisResponse | null>(initialSynthesis);
   const [isRefreshingSynthesis, setIsRefreshingSynthesis] = useState(false);
@@ -50,13 +49,13 @@ export function InsightsPage() {
   }, [projectFilter, result?.insights, riskLevelFilter, sortMode]);
 
   const loadInsights = useCallback(async () => {
-    const previousInsights = globalSynthesisSession.readInsights();
+    const previousInsights = synthesisSession.readInsights();
     if (!previousInsights) {
       setStatus("loading");
       setError(null);
     }
     try {
-      const nextResult = await globalSynthesisSession.revalidateInsights(client);
+      const nextResult = await synthesisSession.revalidateInsights(client);
       setResult(nextResult);
       setStatus("success");
       setError(null);
@@ -67,38 +66,38 @@ export function InsightsPage() {
         setStatus("error");
       }
     }
-  }, [client]);
+  }, [client, synthesisSession]);
 
   const loadSynthesis = useCallback(async () => {
-    const previousSynthesis = globalSynthesisSession.read();
+    const previousSynthesis = synthesisSession.read();
     if (!previousSynthesis) setSynthesisStatus("loading");
     try {
-      const nextSynthesis = await globalSynthesisSession.requestForVisit(client);
+      const nextSynthesis = await synthesisSession.requestForVisit(client);
       setSynthesis(nextSynthesis.status === "unavailable" && previousSynthesis
         ? previousSynthesis
         : nextSynthesis);
       setSynthesisStatus("success");
     } catch {
-      if (!globalSynthesisSession.read()) {
+      if (!synthesisSession.read()) {
         setSynthesis(null);
         setSynthesisStatus("error");
       }
     }
-  }, [client]);
+  }, [client, synthesisSession]);
 
   const refreshSynthesis = useCallback(async () => {
     if (isRefreshingSynthesis) return;
     setIsRefreshingSynthesis(true);
     setSynthesisNotice(null);
-    const previousSynthesis = globalSynthesisSession.read();
+    const previousSynthesis = synthesisSession.read();
     let factsConfirmed = false;
     try {
-      const nextInsights = await globalSynthesisSession.revalidateInsights(client);
+      const nextInsights = await synthesisSession.revalidateInsights(client);
       factsConfirmed = true;
       setResult(nextInsights);
       setStatus("success");
       setError(null);
-      const nextSynthesis = await globalSynthesisSession.forceRefresh(client);
+      const nextSynthesis = await synthesisSession.forceRefresh(client);
       setSynthesis(nextSynthesis.status === "unavailable" && previousSynthesis
         ? previousSynthesis
         : nextSynthesis);
@@ -114,7 +113,7 @@ export function InsightsPage() {
     } finally {
       setIsRefreshingSynthesis(false);
     }
-  }, [client, isRefreshingSynthesis]);
+  }, [client, isRefreshingSynthesis, synthesisSession]);
 
   useEffect(() => {
     void loadInsights();

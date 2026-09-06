@@ -40,22 +40,22 @@ Echo Insight is not an agent that automatically operates your projects. It does 
 
 | Path | Best for | Entry point | What you need |
 | --- | --- | --- | --- |
-| **Online product experience** | Users who want to explore the complete product interface first | [Open Echo Insight](https://echo-insight.pages.dev/?mode=demo) | No login or API key; uses the same synthetic projects as the promo video |
+| **Online product experience** | Users who want to understand the complete product first | [Open Echo Insight](https://echo-insight.pages.dev/?mode=demo) | No login or API key; opens a read-only demo account with five projects at different health levels |
 | **Self-hosted deployment** | Teams or developers who want control over data, models, and runtime | [Start with the installation guide](./README.en.md#installation-guide) | Node.js, a Feishu custom app, your own AI Provider API key, HTTPS, and persistent storage |
 
 ### Online product experience guide
 
-1. Open the [Echo Insight online product experience](https://echo-insight.pages.dev/?mode=demo). It opens the synthetic project dashboard without a login.
-2. Explore Overview, Projects, AI Insights, and Data Sources. All content comes from promo-video fixtures, and every AI paragraph is pre-generated; the page never calls a model.
-3. Only when you want to see your own projects, choose **Sign in to view my real projects** and complete Feishu authorization.
+1. Open the [Echo Insight online product experience](https://echo-insight.pages.dev/?mode=demo). It opens the complete read-only demo account without a login.
+2. Switch among five synthetic projects with different health levels, then explore the project overview, Risk Center, AI Report, all seven source types, cross-project AI Insights, and Settings. Production deterministic rules calculate health and risk in real time; AI explanations are pre-generated examples, so the page never calls an external model.
+3. Only when you want to see your own projects, choose **Sign in and use my projects** and complete Feishu authorization.
 4. On first entry to the real workspace, connect your own DeepSeek or Qwen key, or skip AI and keep deterministic health and risk rules only.
-5. A new account with no project memberships sees an empty real workspace, never a maintainer's or another user's project. **View synthetic project demo** always returns to the public experience.
+5. A new account with no project memberships sees an empty real workspace, never a maintainer's or another user's project. You can return to the complete no-login demo account at any time.
 
-> **The anonymous demo reads no Feishu data and consumes no one's model quota.** In the real workspace, the online deployment still never falls back to a maintainer-owned model key for visitors. Your key is encrypted on the server and bound to your account within the same Echo Insight deployment and Feishu app. It is never written to browser storage, project files, or the repository, and the status API never returns it. The same account is restored after sign-out and sign-in, session expiry followed by sign-in, another device, or a backend restart followed by sign-in; different accounts remain isolated. Only **Disconnect and delete saved API key** removes Echo Insight's saved record. Without a connected model, deterministic health and risk rules remain available while AI explanations and synthesis are unavailable.
+> **The no-login demo account reads no Feishu data and consumes no one's model quota.** In the real workspace, the online deployment still never falls back to a maintainer-owned model key for visitors. Your key is encrypted on the server and bound to your account within the same Echo Insight deployment and Feishu app. It is never written to browser storage, project files, or the repository, and the status API never returns it. The same account is restored after sign-out and sign-in, session expiry followed by sign-in, another device, or a backend restart followed by sign-in; different accounts remain isolated. Only **Disconnect and delete saved API key** removes Echo Insight's saved record. Without a connected model, deterministic health and risk rules remain available while AI explanations and synthesis are unavailable.
 
 DeepSeek or Qwen bills the account that owns the key; Echo Insight does not collect those model fees. **Connect and verify** makes one tiny connectivity request. Once connected, entering a configured project, opening AI Insights for the first time, or manually refreshing may automatically call the model. The online version limits each Feishu-app account to 12 AI explanation / synthesis tasks per 10 minutes with at most two concurrent tasks, and three connection checks; signing in again or changing devices does not reset the in-process account limit. Provider retries and the final bill remain governed by the model platform. The online entry is intended for learning the product flow. For long-running, detailed, or sensitive project data, follow the [self-hosting guide](./README.en.md#installation-guide) and set budget or usage alerts at your model provider.
 
-The public demo and real workspace are isolated data domains. The demo needs no login. The real workspace requires Feishu sign-in, but not every tenant or account is automatically eligible; visible real content always depends on the app's availability scope, user authorization, and project permissions.
+The demo account and real workspace are isolated data domains. The demo needs no login and its server rejects every write operation. The real workspace requires Feishu sign-in, but not every tenant or account is automatically eligible; visible real content always depends on the app's availability scope, user authorization, and project permissions.
 
 ## Product screenshots
 
@@ -102,7 +102,7 @@ The public demo and real workspace are isolated data domains. The demo needs no 
 
 ```mermaid
 flowchart LR
-    A[Open the online entry] --> B[Anonymous synthetic demo]
+    A[Open the online entry] --> B[Complete no-login demo account]
     B --> C{View my real projects?}
     C -- No --> B
     C -- Yes --> D[Feishu login]
@@ -131,7 +131,7 @@ If this is your first time installing a project from GitHub, choose your goal fi
 
 | Your goal | Feishu login | Public HTTPS | Recommended entry |
 | --- | --- | --- | --- |
-| Explore the product | No | No | [Anonymous online demo](https://echo-insight.pages.dev/?mode=demo) |
+| Explore the product | No | No | [Complete demo account](https://echo-insight.pages.dev/?mode=demo) |
 | Run synthetic projects on your computer | No | No | [Local Demo](./README.en.md#local-demo-no-real-feishu) |
 | Read your own real Feishu projects | Yes | Yes | Obtain a stable HTTPS address first (tunnel or public deployment), then run root `setup-local.*` |
 
@@ -503,7 +503,7 @@ Only the three exact paths listed above are public project documentation.
 <details>
   <summary>Does the online experience spend the maintainer's model tokens?</summary>
 
-No. The anonymous public demo uses only synthetic data and fixed explanations, so it makes no model call. In the real workspace, production defaults still disable any maintainer-key fallback. Until a visitor connects their own DeepSeek or Qwen API key, the online version keeps only deterministic rule results. Once connected, usage is billed to that visitor's model-platform account and the key is encrypted on the server for that Feishu-app account; the same account can restore it across logins and devices, and other accounts cannot access it.
+No. The no-login demo account uses only synthetic data and pre-generated explanations, so it makes no model call. In the real workspace, production defaults still disable any maintainer-key fallback. Until a visitor connects their own DeepSeek or Qwen API key, the online version keeps only deterministic rule results. Once connected, usage is billed to that visitor's model-platform account and the key is encrypted on the server for that Feishu-app account; the same account can restore it across logins and devices, and other accounts cannot access it.
 
 </details>
 

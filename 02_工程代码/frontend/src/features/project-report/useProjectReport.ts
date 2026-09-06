@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ProjectApiClient,
-  ProjectReportApiClient,
   readProjectReportCache,
   writeProjectReportCache,
   type ProjectReport,
@@ -11,6 +9,7 @@ import {
   isClientCacheEpochCurrent,
   readClientCacheEpoch,
 } from "../ai-access/client-cache-epoch";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 
 export type ProjectReportStatus = "empty" | "loading" | "success" | "error" | "refreshing";
 export type ProjectReportRefreshOutcome = "success" | "partial" | "failed";
@@ -33,24 +32,25 @@ interface ScopedProjectReportState {
 export function useProjectReport(
   projectId?: string | null,
 ): ProjectReportController {
-  const v1Client = useMemo(() => new ProjectReportApiClient(), []);
-  const projectClient = useMemo(() => new ProjectApiClient(), []);
+  const runtime = useWorkspaceRuntime();
+  const v1Client = runtime.projectReportClient;
+  const projectClient = runtime.projectClient;
   const currentScopeKey = getReportScopeKey(projectId);
   const scopeKeyRef = useRef(currentScopeKey);
   scopeKeyRef.current = currentScopeKey;
   const visibleReportRef = useRef<ProjectReport | null>(null);
   const inFlightRef = useRef<{ scopeKey: string; request: Promise<ProjectReportRefreshOutcome> } | null>(null);
   const [state, setState] = useState<ScopedProjectReportState>(() => (
-    createScopedState(projectId)
+    createScopedState(projectId, runtime.cacheStorage)
   ));
   const visibleState = state.scopeKey === currentScopeKey
     ? state
-    : createScopedState(projectId);
+    : createScopedState(projectId, runtime.cacheStorage);
   visibleReportRef.current = visibleState.report;
 
   useEffect(() => {
-    setState(createScopedState(projectId));
-  }, [currentScopeKey, projectId]);
+    setState(createScopedState(projectId, runtime.cacheStorage));
+  }, [currentScopeKey, projectId, runtime.cacheStorage]);
 
   const refresh = useCallback((): Promise<ProjectReportRefreshOutcome> => {
     if (projectId === null) return Promise.resolve("failed");
@@ -77,7 +77,7 @@ export function useProjectReport(
           || !isClientCacheEpochCurrent(requestEpoch)
         ) return "failed";
         const didCache = writeProjectReportCache(
-          window.localStorage,
+          runtime.cacheStorage,
           nextReport,
           typeof projectId === "string" ? projectId : undefined,
           requestEpoch,
@@ -110,7 +110,7 @@ export function useProjectReport(
       if (inFlightRef.current?.request === request) inFlightRef.current = null;
     });
     return request;
-  }, [projectClient, projectId, v1Client]);
+  }, [projectClient, projectId, runtime.cacheStorage, v1Client]);
 
   return {
     report: visibleState.report,
@@ -121,11 +121,11 @@ export function useProjectReport(
   };
 }
 
-function createScopedState(projectId?: string | null): ScopedProjectReportState {
+function createScopedState(projectId: string | null | undefined, storage: Storage): ScopedProjectReportState {
   const report = projectId === null
     ? null
     : readProjectReportCache(
-        window.localStorage,
+        storage,
         typeof projectId === "string" ? projectId : undefined,
       );
   return {

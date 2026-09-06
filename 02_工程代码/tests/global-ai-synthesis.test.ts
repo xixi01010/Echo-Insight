@@ -401,10 +401,10 @@ test("synthesis API is optional, safe, and frontend treats it independently from
   );
   assert.match(page, /void loadInsights\(\);\s+void loadSynthesis\(\);/);
   assert.match(page, /更新 AI 洞察/);
-  assert.match(page, /globalSynthesisSession\.forceRefresh/);
-  assert.match(page, /globalSynthesisSession\.readInsights\(\)/);
+  assert.match(page, /synthesisSession\.forceRefresh/);
+  assert.match(page, /synthesisSession\.readInsights\(\)/);
   assert.match(page, /status === "loading" && !result/);
-  assert.match(page, /await globalSynthesisSession\.revalidateInsights\(client\);[\s\S]*await globalSynthesisSession\.forceRefresh\(client\);/);
+  assert.match(page, /await synthesisSession\.revalidateInsights\(client\);[\s\S]*await synthesisSession\.forceRefresh\(client\);/);
   assert.match(page, /AI 综合洞察/);
   assert.doesNotMatch(page, /<input|chat|问问 AI|Prompt/iu);
 });

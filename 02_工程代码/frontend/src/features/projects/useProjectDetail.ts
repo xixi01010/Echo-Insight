@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  ProjectApiClient,
   ProjectApiError,
   type ProjectSummary,
 } from "../../services/api";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 
 export type ProjectDetailStatus = "idle" | "loading" | "success" | "error";
 
@@ -15,7 +15,7 @@ interface ProjectDetailState {
 }
 
 export function useProjectDetail(projectId: string | null) {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const client = useWorkspaceRuntime().projectClient;
   const [state, setState] = useState<ProjectDetailState>({
     projectId,
     project: null,

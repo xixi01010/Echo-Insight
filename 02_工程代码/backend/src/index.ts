@@ -84,6 +84,11 @@ import {
   readAiAccessMode,
 } from "./routes/ai-settings.js";
 import {
+  createPublicDemoApi,
+  isPublicDemoApiPath,
+  type PublicDemoApi,
+} from "./demo/public-demo-api.js";
+import {
   ensureRuntimeStorageDirectory,
   resolveRuntimeStoragePaths,
   type RuntimeStoragePaths,
@@ -147,6 +152,7 @@ interface ServerDependencies {
   dataSourceRegistryPath?: string;
   visitorAiAccountStorePath?: string;
   allowedFrontendOrigin?: string;
+  publicDemoApi?: PublicDemoApi;
 }
 
 export function createEchoInsightServer(
@@ -187,6 +193,7 @@ export function createEchoInsightServer(
       : readDevelopmentCurrentUserContextProvider(environment));
   const allowedFrontendOrigin = dependencies.allowedFrontendOrigin
     ?? readAllowedFrontendOrigin(environment);
+  const publicDemoApi = dependencies.publicDemoApi;
   const getRuntimeStoragePaths = (): RuntimeStoragePaths => {
     if (runtimeStoragePaths) return runtimeStoragePaths;
     runtimeStoragePaths = resolveRuntimeStoragePaths(environment, DEFAULT_RUNTIME_STORAGE_DIRECTORY);
@@ -500,6 +507,15 @@ export function createEchoInsightServer(
   return createServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? "/", "http://localhost");
 
+    if (isPublicDemoApiPath(requestUrl.pathname)) {
+      if (!publicDemoApi) {
+        sendPublicDemoUnavailable(response);
+        return;
+      }
+      await publicDemoApi(request, response, requestUrl);
+      return;
+    }
+
     if (
       environment.ECHO_INSIGHT_ENABLE_LEGACY_API !== "1"
       && ["/api/project-data", "/api/project-analysis", "/api/project-report"].includes(requestUrl.pathname)
@@ -689,6 +705,13 @@ function sendNotFound(response: import("node:http").ServerResponse): void {
   }));
 }
 
+function sendPublicDemoUnavailable(response: import("node:http").ServerResponse): void {
+  response.writeHead(503, { "content-type": "application/json; charset=utf-8" });
+  response.end(JSON.stringify({
+    error: { code: "DEMO_UNAVAILABLE", message: "The public demo is unavailable." },
+  }));
+}
+
 const unavailableRiskAnalyzer = {
   async analyze(): Promise<never> {
     throw new Error("Visitor AI provider is not configured.");
@@ -741,7 +764,8 @@ async function startStandaloneServer(): Promise<void> {
     await accountStore.verify();
   }
   console.log("Echo Insight runtime storage ready.");
-  const server = createEchoInsightServer();
+  const publicDemoApi = await createPublicDemoApi();
+  const server = createEchoInsightServer({ publicDemoApi });
   server.listen(port, () => {
     console.log(`Echo Insight backend listening on http://localhost:${port}`);
   });
@@ -754,4 +778,3 @@ if (entryPath === import.meta.url) {
     process.exitCode = 1;
   });
 }
-

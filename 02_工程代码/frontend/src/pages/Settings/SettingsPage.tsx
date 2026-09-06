@@ -4,6 +4,7 @@ import { SegmentedControl } from "../../components/SegmentedControl";
 import { useAuth } from "../../features/auth/AuthContext";
 import { AiConnectionForm } from "../../features/ai-access/AiConnectionForm";
 import { useAiAccess } from "../../features/ai-access/AiAccessContext";
+import { useWorkspaceRuntime } from "../../features/workspace/WorkspaceRuntimeContext";
 import {
   usePreferences,
   type AccentTone,
@@ -35,15 +36,21 @@ const accentOptions: Array<{ value: AccentTone; label: string }> = [
 ];
 
 export function SettingsPage({ status }: SettingsPageProps) {
+  const runtime = useWorkspaceRuntime();
+  const demo = runtime.mode === "demo";
   const { logout, status: authStatus } = useAuth();
   const aiAccess = useAiAccess();
   const preferences = usePreferences();
   const user = authStatus?.user;
-  const displayName = user?.displayName?.trim() || "飞书用户";
+  const displayName = demo ? "Echo 演示账号" : user?.displayName?.trim() || "飞书用户";
+  const accountEntryUnavailable = demo && !runtime.authenticated && authStatus?.mode !== "feishu";
+  const accountEntryLabel = runtime.authenticated
+    ? "返回我的真实工作区"
+    : accountEntryUnavailable ? "登录服务暂未就绪" : "登录并使用我的项目";
 
   return (
     <div className="settings-page">
-      <header className="settings-heading"><p className="section-kicker">个人偏好</p><h1>设置</h1><p>管理 AI 能力连接、显示方式与使用偏好。</p></header>
+      <header className="settings-heading"><p className="section-kicker">{demo ? "演示账号 · 本机偏好" : "个人偏好"}</p><h1>设置</h1><p>{demo ? "了解演示账号的安全边界，并体验只保存在当前设备的显示偏好。" : "管理 AI 能力连接、显示方式与使用偏好。"}</p></header>
       <nav className="settings-nav" aria-label="设置分类">
         <a href="#profile">用户信息</a><a href="#ai">AI 能力</a><a href="#home">首页设置</a><a href="#preferences">偏好设置</a><a href="#general">通用设置</a>
       </nav>
@@ -51,21 +58,25 @@ export function SettingsPage({ status }: SettingsPageProps) {
       <section className="settings-section" id="profile">
         <header><div><h2>用户信息</h2><p>当前登录账号与项目身份来源。</p></div></header>
         <div className="settings-profile">
-          <div className="user-avatar user-avatar--large">{user?.avatarUrl ? <img alt="" src={user.avatarUrl} /> : displayName.slice(0, 1)}</div>
-          <div><strong>{displayName}</strong><p>已通过飞书安全登录</p></div>
-          <button className="secondary-action" onClick={() => void logout()} type="button">退出登录</button>
+          <div className="user-avatar user-avatar--large">{!demo && user?.avatarUrl ? <img alt="" src={user.avatarUrl} /> : demo ? "演" : displayName.slice(0, 1)}</div>
+          <div><strong>{displayName}</strong><p>{demo ? "无需登录 · 合成数据 · 只读体验" : "已通过飞书安全登录"}</p></div>
+          {demo ? <button className="secondary-action" disabled={accountEntryUnavailable} onClick={runtime.enterAccount} type="button">{accountEntryLabel}</button> : <button className="secondary-action" onClick={() => void logout()} type="button">退出登录</button>}
         </div>
       </section>
 
       <section className="settings-section" id="ai">
         <header>
           <div><h2>AI 能力</h2><p>连接模型平台，用于风险解释与跨项目洞察。</p></div>
-          <span className="local-preference-badge">
-            {aiAccess.status?.configured ? "已连接" : "未连接"}
-          </span>
+          <span className="local-preference-badge">{demo ? "演示模式" : aiAccess.status?.configured ? "已连接" : "未连接"}</span>
         </header>
-        {aiAccess.loading ? <p className="settings-inline-state">正在读取 AI 连接状态…</p> : null}
-        {aiAccess.status?.mode === "server" ? (
+        {demo ? <div className="ai-settings-content">
+          <SettingRow description="健康度与风险由正式确定性规则针对合成项目实时计算。" label="风险分析"><span className="setting-value">同一规则链路</span></SettingRow>
+          <SettingRow description="演示中的解释是针对合成数据准备并审核的示例，不会在访问时请求模型。" label="AI 解释"><span className="setting-value">预生成示例</span></SettingRow>
+          <div className="security-note"><strong>匿名体验不消耗 Token</strong><p>演示账号不需要 API Key，不连接你的飞书数据，也不会调用 DeepSeek、千问或任何外部模型。登录后可使用自己的 API Key 启用真实工作区 AI 能力。</p></div>
+          <button className="primary-action" disabled={accountEntryUnavailable} onClick={runtime.enterAccount} type="button">{runtime.authenticated ? "返回我的真实工作区" : accountEntryUnavailable ? "登录服务暂未就绪" : "登录并配置我的 AI 能力"}</button>
+        </div> : null}
+        {!demo && aiAccess.loading ? <p className="settings-inline-state">正在读取 AI 连接状态…</p> : null}
+        {!demo && aiAccess.status?.mode === "server" ? (
           <>
             <SettingRow description="自托管版本通过服务端 .env 管理模型配置。" label="连接方式">
               <span className="setting-value">部署环境托管</span>
@@ -80,7 +91,7 @@ export function SettingsPage({ status }: SettingsPageProps) {
             <div className="security-note"><strong>自托管密钥边界</strong><p>密钥只应保存在部署端的真实 .env 中，不要粘贴到前端、README、Issue 或提交记录。</p></div>
           </>
         ) : null}
-        {aiAccess.status?.mode === "visitor" ? (
+        {!demo && aiAccess.status?.mode === "visitor" ? (
           <div className="ai-settings-content">
             {aiAccess.status.configured ? (
               <>
@@ -131,9 +142,9 @@ export function SettingsPage({ status }: SettingsPageProps) {
 
       <section className="settings-section" id="general">
         <header><div><h2>通用设置</h2><p>查看数据读取状态与安全说明。</p></div></header>
-        <SettingRow description="Echo Insight 只读取已授权的项目数据。" label="数据来源"><span className="setting-value">飞书多维表格 · 只读</span></SettingRow>
+        <SettingRow description={demo ? "演示账号只读取公开的合成项目快照，不连接真实飞书租户。" : "Echo Insight 只读取已授权的项目数据。"} label="数据来源"><span className="setting-value">{demo ? "7 类合成来源 · 只读" : "飞书多维表格 · 只读"}</span></SettingRow>
         <SettingRow description="最近一次项目分析处理状态。" label="分析状态"><span className="setting-value">{statusCopy[status]}</span></SettingRow>
-        <div className="security-note"><strong>数据安全保障声明</strong><p>Echo Insight 只读取已授权的项目数据，不会修改飞书中的任务、负责人、截止日期或其他项目内容。</p></div>
+        <div className="security-note"><strong>数据安全保障声明</strong><p>{demo ? "当前所有项目、任务、人员与来源均为虚构合成数据；演示账号不会发现、请求或展示真实租户资源。" : "Echo Insight 只读取已授权的项目数据，不会修改飞书中的任务、负责人、截止日期或其他项目内容。"}</p></div>
         <button className="text-action" onClick={preferences.resetPreferences} type="button">恢复本机默认显示设置</button>
       </section>
     </div>

@@ -114,7 +114,7 @@ test("V2 workspace shell keeps dashboard and project content fluid while preserv
   assert.match(dashboard, /CreateProjectModal/);
   assert.match(dashboard, /JoinProjectModal/);
   assert.equal((dashboard.match(/<Modal /g) ?? []).length, 2);
-  assert.match(dashboard, /GlobalInsightsApiClient/);
+  assert.match(dashboard, /runtime\.globalInsightsClient/);
   assert.match(modal, /createPortal/);
   assert.match(modal, /document\.body/);
   assert.match(modal, /modal-backdrop/);
@@ -167,6 +167,9 @@ test("workspace sidebar keeps one bottom-anchored footer and uses delayed deskto
   assert.doesNotMatch(appShell, /desktopExpanded \|\| mobileOpen/);
   assert.match(styles, /\.workspace-mobile-overlay \{ display: none; \}/);
   assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.workspace-mobile-overlay \{[^}]*display: block;[^}]*backdrop-filter: blur\(3px\);/);
+  assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.workspace-sidebar \{[^}]*overflow-y: auto;[^}]*visibility: hidden;[^}]*\}/);
+  assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.workspace-sidebar\.is-mobile-open \{[^}]*visibility: visible;[^}]*\}/);
+  assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.workspace-sidebar__brand-copy \{[^}]*flex: 1;[^}]*min-width: 0;[^}]*\}/);
   assert.doesNotMatch(styles, /\.workspace-sidebar:hover[^}]*width:/);
   assert.match(appShell, /onPointerEnter=\{handleSidebarPointerEnter\}/);
   assert.match(appShell, /onPointerLeave=\{handleSidebarPointerLeave\}/);

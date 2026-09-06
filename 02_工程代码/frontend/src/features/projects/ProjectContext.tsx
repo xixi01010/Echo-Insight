@@ -12,10 +12,10 @@ import {
   ProjectApiClient,
   ProjectApiError,
   readProjectListSnapshot,
-  type ProjectListStorage,
   type ProjectSummary,
   writeProjectListSnapshot,
 } from "../../services/api";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 import {
   createHydratedProjectsState,
   reduceProjectsState,
@@ -40,11 +40,12 @@ interface ProjectProviderProps extends PropsWithChildren {
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
 export function ProjectProvider({ children, client }: ProjectProviderProps) {
-  const apiClient = useMemo(() => client ?? new ProjectApiClient(), [client]);
+  const runtime = useWorkspaceRuntime();
+  const apiClient = client ?? runtime.projectClient;
   const [state, dispatch] = useReducer(
     reduceProjectsState,
     null,
-    () => createHydratedProjectsState(readProjectListSnapshot(getProjectListStorage()) ?? []),
+    () => createHydratedProjectsState(readProjectListSnapshot(runtime.cacheStorage) ?? []),
   );
   const requestSequenceRef = useRef(0);
 
@@ -68,8 +69,8 @@ export function ProjectProvider({ children, client }: ProjectProviderProps) {
   }, [refreshProjects]);
 
   useEffect(() => {
-    writeProjectListSnapshot(getProjectListStorage(), state.projects);
-  }, [state.projects]);
+    writeProjectListSnapshot(runtime.cacheStorage, state.projects);
+  }, [runtime.cacheStorage, state.projects]);
 
   const setCurrentProject = useCallback((projectId: string | null) => {
     dispatch({ type: "select", projectId });
@@ -105,8 +106,4 @@ export function getProjectsErrorMessage(error: unknown): string {
     return "当前无法连接项目服务，请检查网络后重试。";
   }
   return "暂时无法读取我的项目，请稍后重试。";
-}
-
-function getProjectListStorage(): ProjectListStorage | null {
-  return typeof window === "undefined" ? null : window.localStorage;
 }

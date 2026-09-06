@@ -1,4 +1,7 @@
-import { globalSynthesisSession } from "../global-insights/synthesis-session.js";
+import {
+  GlobalSynthesisSession,
+  globalSynthesisSession,
+} from "../global-insights/synthesis-session.js";
 import { PROJECT_INTELLIGENCE_CACHE_PREFIX } from "../../services/api/intelligence-cache.js";
 import {
   PROJECT_REPORT_CACHE_KEY,
@@ -13,9 +16,12 @@ interface RemovableStorage {
   removeItem(key: string): void;
 }
 
-export function clearAiDerivedClientCaches(storage: RemovableStorage | undefined): void {
+export function clearAiDerivedClientCaches(
+  storage: RemovableStorage | undefined,
+  synthesisSession: GlobalSynthesisSession = globalSynthesisSession,
+): void {
   advanceClientCacheEpoch();
-  globalSynthesisSession.reset();
+  synthesisSession.reset();
   removeMatchingKeys(storage, (key) => (
     key === PROJECT_REPORT_CACHE_KEY
     || key.startsWith(`${PROJECT_SCOPED_REPORT_CACHE_PREFIX}:`)
@@ -23,8 +29,11 @@ export function clearAiDerivedClientCaches(storage: RemovableStorage | undefined
   ));
 }
 
-export function clearAuthenticatedClientCaches(storage: RemovableStorage | undefined): void {
-  clearAiDerivedClientCaches(storage);
+export function clearAuthenticatedClientCaches(
+  storage: RemovableStorage | undefined,
+  synthesisSession: GlobalSynthesisSession = globalSynthesisSession,
+): void {
+  clearAiDerivedClientCaches(storage, synthesisSession);
   removeMatchingKeys(storage, (key) => key === PROJECT_LIST_CACHE_KEY);
 }
 

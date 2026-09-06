@@ -8,14 +8,14 @@ import type { ProjectDataSourceController } from "../../features/projects/usePro
 import { ProjectApiError, type ProjectSourceStatus, type ProjectSourceType } from "../../services/api";
 import { useDelayedLoadingVisibility } from "../../hooks/useDelayedLoadingVisibility";
 
-interface ProjectDataSourcePanelProps { dataSourceController: ProjectDataSourceController; currentUserRole: "owner" | "member"; onConfigured: () => Promise<void>; }
+interface ProjectDataSourcePanelProps { dataSourceController: ProjectDataSourceController; currentUserRole: "owner" | "member"; onConfigured: () => Promise<void>; readOnly?: boolean; }
 
 const SOURCE_TYPES: readonly ProjectSourceType[] = [
   "feishu-base", "feishu-chat", "feishu-minutes", "feishu-docs", "feishu-wiki-drive", "feishu-task", "feishu-calendar",
 ] as const;
 const SOURCE_OPTIONS: Array<{ value: ProjectSourceType; label: string }> = SOURCE_TYPES.map((value) => ({ value, label: getSourceLabel(value) }));
 
-export function ProjectDataSourcePanel({ dataSourceController, currentUserRole, onConfigured }: ProjectDataSourcePanelProps) {
+export function ProjectDataSourcePanel({ dataSourceController, currentUserRole, onConfigured, readOnly = false }: ProjectDataSourcePanelProps) {
   const { addSource, configure, dataSource, error, getCalendarEventOptions, getSourceOptions, refresh, removeSource, setSourceEnabled, status } = dataSourceController;
   const [sourceType, setSourceType] = useState<ProjectSourceType>("feishu-base");
   const [sourceName, setSourceName] = useState("");
@@ -79,12 +79,12 @@ export function ProjectDataSourcePanel({ dataSourceController, currentUserRole, 
   };
 
   return <section className="project-data-source-panel">
-    <div className="project-data-source-panel__status"><p className="section-kicker">项目数据配置</p><h2>当前数据来源</h2><p>这里管理哪些已授权信息参与项目分析，以及它们当前是否正常。</p></div>
+    <div className="project-data-source-panel__status"><p className="section-kicker">{readOnly ? "演示账号 · 只读数据" : "项目数据配置"}</p><h2>当前数据来源</h2><p>{readOnly ? "这些合成来源展示七类信息如何共同参与项目分析；演示账号不会连接或修改真实飞书数据。" : "这里管理哪些已授权信息参与项目分析，以及它们当前是否正常。"}</p></div>
     {sources.length ? <div className="data-source-list" aria-label="当前数据来源">{sources.map((source) => <article className="data-source-card" key={source.id}>
       <div className="data-source-card__icon" aria-hidden="true">{getSourceBadge(source.type)}</div>
       <div className="data-source-card__identity"><strong>{formatSourceDisplayName(source.type, source.displayName)}</strong><small>数据状态：{getSourceDataState(source.freshness)}</small></div>
       <div className="data-source-card__meta"><span>{source.lastSuccessfulReadAt ? `最近读取成功：${formatProductDateTime(source.lastSuccessfulReadAt)}` : sourceStatusLabel(source)}</span>{source.failureCategory ? <small>{failureCategoryLabel(source.failureCategory)}</small> : null}</div>
-      {currentUserRole === "owner" ? <div className="data-source-card__actions">
+      {currentUserRole === "owner" && !readOnly ? <div className="data-source-card__actions">
         <button className="secondary-action" disabled={submitting} onClick={() => void toggleSource(source)} type="button">{source.enabled ? "暂停使用" : "恢复使用"}</button>
         <button
           aria-controls={removingId === source.id ? getRemoveDialogId(source.id) : undefined}
@@ -114,7 +114,7 @@ export function ProjectDataSourcePanel({ dataSourceController, currentUserRole, 
       </div> : null}
     </article>)}</div> : <p className="dashboard-card-empty">尚未添加数据来源。</p>}
     {actionError ? <p className="inline-alert" role="alert">{actionError}</p> : null}
-    {currentUserRole === "member" ? <p className="inline-alert">你可以查看数据状态；只有项目负责人可以添加、暂停或移除来源。</p> : <form className="project-form project-form--source" onSubmit={(event) => void submitSource(event)}>
+    {readOnly ? <p className="inline-alert">演示账号为只读模式：可以查看全部来源状态，但不能添加、暂停、恢复或移除来源。</p> : currentUserRole === "member" ? <p className="inline-alert">你可以查看数据状态；只有项目负责人可以添加、暂停或移除来源。</p> : <form className="project-form project-form--source" onSubmit={(event) => void submitSource(event)}>
       <h3>添加数据来源</h3>
       <label><span>来源类型</span><CustomSelect aria-label="来源类型" onChange={changeSourceType} options={SOURCE_OPTIONS} value={sourceType} /></label>
       <label><span>显示名称（可选）</span><input onChange={(event) => setSourceName(event.target.value)} value={sourceName} /></label>

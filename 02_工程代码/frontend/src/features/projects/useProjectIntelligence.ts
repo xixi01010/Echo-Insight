@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ProjectApiClient,
   readProjectIntelligenceCache,
   writeProjectIntelligenceCache,
   type ProjectIntelligence,
@@ -9,6 +8,7 @@ import {
   isClientCacheEpochCurrent,
   readClientCacheEpoch,
 } from "../ai-access/client-cache-epoch";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 
 export type ProjectIntelligenceStatus = "idle" | "loading" | "refreshing" | "success" | "unavailable";
 
@@ -25,23 +25,24 @@ interface ScopedIntelligenceState {
 }
 
 export function useProjectIntelligence(projectId: string | null, enabled: boolean): ProjectIntelligenceController {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const runtime = useWorkspaceRuntime();
+  const client = runtime.projectClient;
   const currentScopeKey = getIntelligenceScopeKey(projectId);
   const scopeKeyRef = useRef(currentScopeKey);
   scopeKeyRef.current = currentScopeKey;
   const visibleIntelligenceRef = useRef<ProjectIntelligence | null>(null);
   const inFlightRef = useRef<{ scopeKey: string; request: Promise<"success" | "partial" | "failed"> } | null>(null);
   const [state, setState] = useState<ScopedIntelligenceState>(() => (
-    createScopedState(projectId)
+    createScopedState(projectId, runtime.cacheStorage)
   ));
   const visibleState = state.scopeKey === currentScopeKey
     ? state
-    : createScopedState(projectId);
+    : createScopedState(projectId, runtime.cacheStorage);
   visibleIntelligenceRef.current = visibleState.intelligence;
 
   useEffect(() => {
-    setState(createScopedState(projectId));
-  }, [currentScopeKey, projectId]);
+    setState(createScopedState(projectId, runtime.cacheStorage));
+  }, [currentScopeKey, projectId, runtime.cacheStorage]);
 
   const refresh = useCallback((): Promise<"success" | "partial" | "failed"> => {
     if (!projectId || !enabled) return Promise.resolve("failed");
@@ -63,7 +64,7 @@ export function useProjectIntelligence(projectId: string | null, enabled: boolea
           || !isClientCacheEpochCurrent(requestEpoch)
         ) return "failed";
         const didCache = writeProjectIntelligenceCache(
-          window.localStorage,
+          runtime.cacheStorage,
           projectId,
           next,
           requestEpoch,
@@ -85,7 +86,7 @@ export function useProjectIntelligence(projectId: string | null, enabled: boolea
       if (inFlightRef.current?.request === request) inFlightRef.current = null;
     });
     return request;
-  }, [client, enabled, projectId]);
+  }, [client, enabled, projectId, runtime.cacheStorage]);
 
   useEffect(() => {
     if (!enabled || !projectId) return;
@@ -99,8 +100,8 @@ export function useProjectIntelligence(projectId: string | null, enabled: boolea
   };
 }
 
-function createScopedState(projectId: string | null): ScopedIntelligenceState {
-  const intelligence = projectId ? readProjectIntelligenceCache(window.localStorage, projectId) : null;
+function createScopedState(projectId: string | null, storage: Storage): ScopedIntelligenceState {
+  const intelligence = projectId ? readProjectIntelligenceCache(storage, projectId) : null;
   return {
     scopeKey: getIntelligenceScopeKey(projectId),
     intelligence,

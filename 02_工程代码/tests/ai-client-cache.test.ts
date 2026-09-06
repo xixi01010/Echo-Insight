@@ -154,9 +154,9 @@ test("credential transitions invalidate caches before requests and clear the key
     "utf8",
   );
 
-  assertAppearsBefore(aiAccessSource, "const connect =", "clearAiDerivedClientCaches(window.localStorage);", "await client.connect");
-  assertAppearsBefore(aiAccessSource, "const skip =", "clearAiDerivedClientCaches(window.localStorage);", "await client.skip");
-  assertAppearsBefore(aiAccessSource, "const disconnect =", "clearAiDerivedClientCaches(window.localStorage);", "await client.disconnect");
+  assertAppearsBefore(aiAccessSource, "const connect =", "clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);", "await client.connect");
+  assertAppearsBefore(aiAccessSource, "const skip =", "clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);", "await client.skip");
+  assertAppearsBefore(aiAccessSource, "const disconnect =", "clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);", "await client.disconnect");
   assertAppearsBefore(authSource, "const logout =", "clearAuthenticatedClientCaches(window.localStorage);", "await client.logout");
   assertAppearsBefore(authSource, "const refreshStatus =", "clearAuthenticatedClientCaches(window.localStorage);", "await client.getStatus");
   assert.match(

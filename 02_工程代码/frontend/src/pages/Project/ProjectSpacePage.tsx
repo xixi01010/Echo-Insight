@@ -10,6 +10,7 @@ import { getProjectSummaryAvailabilityLabel } from "../../features/projects/proj
 import { useProjectDetail } from "../../features/projects/useProjectDetail";
 import { useProjectDataSource } from "../../features/projects/useProjectDataSource";
 import { useProjectIntelligence } from "../../features/projects/useProjectIntelligence";
+import { useWorkspaceRuntime } from "../../features/workspace/WorkspaceRuntimeContext";
 import { useDelayedLoadingVisibility } from "../../hooks/useDelayedLoadingVisibility";
 import { AIReportPage } from "../AIReport/AIReportPage";
 import { DashboardPage } from "../Dashboard/DashboardPage";
@@ -23,6 +24,7 @@ export const PROJECT_HEADER_COLLAPSE_SCROLL_Y = 140;
 export const PROJECT_HEADER_EXPAND_SCROLL_Y = 72;
 
 export function ProjectSpacePage({ view }: { view: ProjectSpaceView }) {
+  const runtime = useWorkspaceRuntime();
   const routeParams = useParams<{ projectId: string }>();
   const projectId = routeParams.projectId?.trim() || null;
   const navigate = useNavigate();
@@ -269,6 +271,7 @@ export function ProjectSpacePage({ view }: { view: ProjectSpaceView }) {
               currentUserRole={projectDetail.project.currentUserRole}
               dataSourceController={projectDataSource}
               onConfigured={onConfigured}
+              readOnly={runtime.mode === "demo"}
             />
           ) : null}
           {view !== "data-source" && showDataSourceLoading ? <SectionSkeleton description="正在确认当前项目是否已经连接数据源。" title="正在读取项目配置" /> : null}

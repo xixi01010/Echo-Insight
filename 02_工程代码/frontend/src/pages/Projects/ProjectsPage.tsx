@@ -8,6 +8,7 @@ import { useDelayedLoadingVisibility } from "../../hooks/useDelayedLoadingVisibi
 import { usePreferences } from "../../features/preferences/PreferenceContext";
 import { getRiskLevelPresentation, getRiskToneClass } from "../../features/project-report/presentation";
 import { useProjects } from "../../features/projects/ProjectContext";
+import { useWorkspaceRuntime } from "../../features/workspace/WorkspaceRuntimeContext";
 import {
   getCreateProjectErrorMessage,
   normalizeProjectNameInput,
@@ -19,8 +20,6 @@ import {
   hasProjectHealthSummary,
 } from "../../features/projects/project-summary-presentation";
 import {
-  GlobalInsightsApiClient,
-  ProjectApiClient,
   ProjectApiError,
   type GlobalInsightsResponse,
   type ProjectSummary,
@@ -29,6 +28,8 @@ import {
 type DashboardModal = "create" | "join" | null;
 
 export function ProjectsPage() {
+  const runtime = useWorkspaceRuntime();
+  const demo = runtime.mode === "demo";
   const { projects, projectsError, projectsLoading, projectsRefreshing, refreshProjects } = useProjects();
   const navigate = useNavigate();
   const showInitialLoading = useDelayedLoadingVisibility(projectsLoading && projects.length === 0);
@@ -41,10 +42,9 @@ export function ProjectsPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const client = new GlobalInsightsApiClient();
-    void client.getInsights(controller.signal).then(setInsights).catch(() => setInsights(null));
+    void runtime.globalInsightsClient.getInsights(controller.signal).then(setInsights).catch(() => setInsights(null));
     return () => controller.abort();
-  }, []);
+  }, [runtime.globalInsightsClient]);
 
   const sortedProjects = useMemo(() => [...projects].sort((left, right) => (
     projectSort === "name"
@@ -59,7 +59,7 @@ export function ProjectsPage() {
   if (projectsError && projects.length === 0) {
     return (
       <div className="page-stack dashboard-page">
-        <DashboardHeading onCreate={() => setModal("create")} onJoin={() => setModal("join")} />
+        <DashboardHeading demo={demo} onCreate={() => setModal("create")} onJoin={() => setModal("join")} />
         <StatePanel action={{ label: "重新加载", onClick: () => void refreshProjects(), disabled: projectsLoading }} description={projectsError} title="暂时无法读取项目" />
       </div>
     );
@@ -80,7 +80,7 @@ export function ProjectsPage() {
 
   return (
     <div aria-busy={projectsRefreshing || undefined} className={`page-stack dashboard-page${projectsRefreshing ? " is-refreshing" : ""}`}>
-      <DashboardHeading onCreate={() => setModal("create")} onJoin={() => setModal("join")} />
+      <DashboardHeading demo={demo} onCreate={() => setModal("create")} onJoin={() => setModal("join")} />
       {projectsError ? <p className="inline-alert" role="alert">部分项目暂时未能更新，页面展示上一次可用信息。</p> : null}
       {searchParams.get("join") === "failed" ? <p className="inline-alert" role="alert">未能确认你的项目访问资格，请检查飞书中的访问权限后重试。</p> : null}
       {projectsRefreshing ? <p aria-live="polite" className="dashboard-refresh-notice dashboard-refresh-notice--updating">正在更新项目健康度，页面先展示上次结果。</p> : null}
@@ -91,9 +91,11 @@ export function ProjectsPage() {
           <h2>建立你的第一个项目视图</h2>
           <p>创建一个新项目，或通过已有飞书多维表格加入你参与的项目。</p>
           <div className="dashboard-empty__actions">
-            <button className="primary-action" onClick={() => setModal("create")} type="button"><AppIcon name="plus" />创建项目</button>
-            <button className="secondary-action" onClick={() => setModal("join")} type="button"><AppIcon name="join" />加入项目</button>
-            <Link className="secondary-action" to="/?mode=demo"><AppIcon name="insights" />查看虚拟项目演示</Link>
+            {demo ? <button className="primary-action" onClick={runtime.enterAccount} type="button">登录并使用我的项目</button> : <>
+              <button className="primary-action" onClick={() => setModal("create")} type="button"><AppIcon name="plus" />创建项目</button>
+              <button className="secondary-action" onClick={() => setModal("join")} type="button"><AppIcon name="join" />加入项目</button>
+              <Link className="secondary-action" to="/?mode=demo"><AppIcon name="insights" />查看虚拟项目演示</Link>
+            </>}
           </div>
         </section>
       ) : (
@@ -137,8 +139,8 @@ export function ProjectsPage() {
         </>
       )}
 
-      <CreateProjectModal onClose={() => setModal(null)} open={modal === "create"} />
-      <JoinProjectModal onClose={() => setModal(null)} open={modal === "join"} />
+      {!demo ? <CreateProjectModal onClose={() => setModal(null)} open={modal === "create"} /> : null}
+      {!demo ? <JoinProjectModal onClose={() => setModal(null)} open={modal === "join"} /> : null}
     </div>
   );
 }
@@ -148,14 +150,14 @@ function FavoriteProjectItem({ loading, onRemove, project }: { loading: boolean;
   return <li><Link to={`/projects/${encodeURIComponent(project.id)}`}><strong>{project.name}</strong>{hasProjectHealthSummary(project) ? <span>健康度 {project.healthScore}{availability ? ` · ${availability}` : ""}</span> : <span>{availability}</span>}</Link><button aria-label={`取消关注 ${project.name}`} aria-pressed="true" className="project-favorite-action project-favorite-action--icon" onClick={onRemove} title="取消关注" type="button"><AppIcon name="star" /></button></li>;
 }
 
-function DashboardHeading({ onCreate, onJoin }: { onCreate: () => void; onJoin: () => void }) {
+function DashboardHeading({ demo, onCreate, onJoin }: { demo: boolean; onCreate: () => void; onJoin: () => void }) {
   return (
     <header className="dashboard-heading">
-      <div><p className="section-kicker">个人项目控制台</p><h1>今天，先看清项目全局</h1><p>集中了解你参与项目的健康状态、风险变化与下一步关注重点。</p></div>
-      <div className="dashboard-heading__actions">
-        <button className="secondary-action" onClick={onJoin} type="button"><AppIcon name="join" />加入项目</button>
-        <button className="primary-action" onClick={onCreate} type="button"><AppIcon name="plus" />创建项目</button>
-      </div>
+      <div><p className="section-kicker">{demo ? "演示账号 · 项目控制台" : "个人项目控制台"}</p><h1>今天，先看清项目全局</h1><p>{demo ? "通过五个不同健康状态的合成项目，完整体验风险判断、多源信息与项目洞察。" : "集中了解你参与项目的健康状态、风险变化与下一步关注重点。"}</p></div>
+      {demo ? null : <div className="dashboard-heading__actions">
+          <button className="secondary-action" onClick={onJoin} type="button"><AppIcon name="join" />加入项目</button>
+          <button className="primary-action" onClick={onCreate} type="button"><AppIcon name="plus" />创建项目</button>
+        </div>}
     </header>
   );
 }
@@ -165,7 +167,7 @@ function MetricCard({ label, note, onClick, tone, value }: { label: string; note
 }
 
 function CreateProjectModal({ onClose, open }: { onClose: () => void; open: boolean }) {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const client = useWorkspaceRuntime().projectClient;
   const navigate = useNavigate();
   const { refreshProjects } = useProjects();
   const [name, setName] = useState("");
@@ -198,7 +200,7 @@ function CreateProjectModal({ onClose, open }: { onClose: () => void; open: bool
 }
 
 function JoinProjectModal({ onClose, open }: { onClose: () => void; open: boolean }) {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const client = useWorkspaceRuntime().projectClient;
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

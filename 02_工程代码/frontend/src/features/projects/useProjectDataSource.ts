@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import {
-  ProjectApiClient,
   ProjectApiError,
   type CalendarEventOption,
   type ProjectDataSourceStatus,
   type ProjectSourceOption,
   type ProjectSourceStatus,
 } from "../../services/api";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 import {
   createProjectDataSourceState,
   getVisibleProjectDataSourceState,
@@ -28,7 +28,7 @@ export interface ProjectDataSourceController {
 }
 
 export function useProjectDataSource(projectId: string | null): ProjectDataSourceController {
-  const client = useMemo(() => new ProjectApiClient(), []);
+  const client = useWorkspaceRuntime().projectClient;
   const [state, dispatch] = useReducer(
     reduceProjectDataSourceState,
     projectId,

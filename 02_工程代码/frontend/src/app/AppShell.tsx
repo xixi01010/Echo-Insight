@@ -4,6 +4,7 @@ import { AppIcon, type AppIconName } from "../components/AppIcon";
 import { BrandMark } from "../components/BrandMark";
 import { useAuth } from "../features/auth/AuthContext";
 import { useProjects } from "../features/projects/ProjectContext";
+import { useWorkspaceRuntime } from "../features/workspace/WorkspaceRuntimeContext";
 
 const navigationIcons: Record<string, AppIconName> = {
   "首页": "home",
@@ -26,7 +27,9 @@ export function AppShell({ children }: PropsWithChildren) {
   const desktopExpandedRef = useRef(false);
   const pointerInsideRef = useRef(false);
   const focusInsideRef = useRef(false);
-  const { logout, status } = useAuth();
+  const { error: authError, logout, status } = useAuth();
+  const runtime = useWorkspaceRuntime();
+  const demo = runtime.mode === "demo";
   const { currentProject, projects } = useProjects();
   const location = useLocation();
   const projectId = currentProject?.id ?? projects[0]?.id;
@@ -38,7 +41,14 @@ export function AppShell({ children }: PropsWithChildren) {
     { to: "/settings", label: "设置" },
   ];
   const user = status?.user;
-  const displayName = user?.displayName?.trim() || "飞书用户";
+  const displayName = demo ? "Echo 演示账号" : user?.displayName?.trim() || "飞书用户";
+  const accountEntryUnavailable = demo && !runtime.authenticated && status?.mode !== "feishu";
+  const accountEntryLabel = runtime.authenticated
+    ? "返回我的真实工作区"
+    : accountEntryUnavailable ? "登录服务暂未就绪" : "登录并使用我的项目";
+  const accountEntryNotice = demo
+    ? authError ?? (accountEntryUnavailable ? "当前部署未配置飞书登录；你仍可继续浏览完整演示账号。" : null)
+    : null;
   const contentWidth = location.pathname.startsWith("/projects/")
     ? "wide"
     : location.pathname === "/settings" ? "settings" : "standard";
@@ -183,9 +193,9 @@ export function AppShell({ children }: PropsWithChildren) {
 
         <div className="workspace-sidebar__footer">
           <div className="workspace-sidebar__account">
-            <div className="user-avatar" aria-hidden="true">{user?.avatarUrl ? <img alt="" src={user.avatarUrl} /> : displayName.slice(0, 1)}</div>
-            <div className="workspace-sidebar__account-copy"><strong>{displayName}</strong><span>已通过飞书登录</span></div>
-            <button aria-label="退出登录" className="icon-button workspace-sidebar__logout" onClick={() => void logout()} title="退出登录" type="button"><AppIcon name="logout" /></button>
+            <div className="user-avatar" aria-hidden="true">{!demo && user?.avatarUrl ? <img alt="" src={user.avatarUrl} /> : displayName.slice(demo ? 5 : 0, demo ? 6 : 1)}</div>
+            <div className="workspace-sidebar__account-copy"><strong>{displayName}</strong><span>{demo ? "合成数据 · 只读" : "已通过飞书登录"}</span></div>
+            {demo ? <button aria-label={accountEntryLabel} className="icon-button workspace-sidebar__logout" disabled={accountEntryUnavailable} onClick={runtime.enterAccount} title={accountEntryLabel} type="button"><AppIcon name="chevron" /></button> : <button aria-label="退出登录" className="icon-button workspace-sidebar__logout" onClick={() => void logout()} title="退出登录" type="button"><AppIcon name="logout" /></button>}
           </div>
         </div>
       </aside>
@@ -194,9 +204,10 @@ export function AppShell({ children }: PropsWithChildren) {
         <header className="workspace-mobile-header">
           <button aria-label="打开导航" className="icon-button" onClick={() => setMobileOpen(true)} type="button"><AppIcon name="menu" /></button>
           <div className="workspace-mobile-header__brand"><BrandMark appIconVariant size={30} /><strong>Echo Insight</strong></div>
-          <div className="user-avatar user-avatar--small" aria-label={displayName}>{displayName.slice(0, 1)}</div>
+          <div className="user-avatar user-avatar--small" aria-label={displayName}>{demo ? "演" : displayName.slice(0, 1)}</div>
         </header>
         <div className="workspace-viewport">
+          {demo ? <section className="demo-account-banner" role="note"><div><strong>你正在浏览完整演示账号</strong><span>5 个合成项目 · 7 类信息来源 · 规则实时计算 · AI 解释为预生成示例 · 不调用外部模型</span>{accountEntryNotice ? <span className="demo-account-banner__notice" role={authError ? "alert" : undefined}>{accountEntryNotice}</span> : null}</div><button className="secondary-action" disabled={accountEntryUnavailable} onClick={runtime.enterAccount} type="button">{accountEntryLabel}</button></section> : null}
           <main className={`workspace-content workspace-content--${contentWidth}`}>{children}</main>
         </div>
       </div>

@@ -8,12 +8,12 @@ import {
   type PropsWithChildren,
 } from "react";
 
-import {
-  AiSettingsApiClient,
-  type AiSettingsStatus,
-  type VisitorAiProviderId,
+import type {
+  AiSettingsStatus,
+  VisitorAiProviderId,
 } from "../../services/api/ai-settings";
 import { clearAiDerivedClientCaches } from "./clear-ai-caches";
+import { useWorkspaceRuntime } from "../workspace/WorkspaceRuntimeContext";
 
 interface AiAccessContextValue {
   status: AiSettingsStatus | null;
@@ -30,7 +30,8 @@ interface AiAccessContextValue {
 const AiAccessContext = createContext<AiAccessContextValue | null>(null);
 
 export function AiAccessProvider({ children }: PropsWithChildren) {
-  const client = useMemo(() => new AiSettingsApiClient(), []);
+  const runtime = useWorkspaceRuntime();
+  const client = runtime.aiSettingsClient;
   const [status, setStatus] = useState<AiSettingsStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
@@ -55,7 +56,7 @@ export function AiAccessProvider({ children }: PropsWithChildren) {
   const connect = useCallback(async (providerId: VisitorAiProviderId, apiKey: string) => {
     setPending(true);
     setError(null);
-    clearAiDerivedClientCaches(window.localStorage);
+    clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);
     try {
       const nextStatus = await client.connect(providerId, apiKey);
       setStatus(nextStatus);
@@ -67,12 +68,12 @@ export function AiAccessProvider({ children }: PropsWithChildren) {
     } finally {
       setPending(false);
     }
-  }, [client]);
+  }, [client, runtime.cacheStorage, runtime.synthesisSession]);
 
   const skip = useCallback(async () => {
     setPending(true);
     setError(null);
-    clearAiDerivedClientCaches(window.localStorage);
+    clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);
     try {
       setStatus(await client.skip());
       setRevision((value) => value + 1);
@@ -81,12 +82,12 @@ export function AiAccessProvider({ children }: PropsWithChildren) {
     } finally {
       setPending(false);
     }
-  }, [client]);
+  }, [client, runtime.cacheStorage, runtime.synthesisSession]);
 
   const disconnect = useCallback(async () => {
     setPending(true);
     setError(null);
-    clearAiDerivedClientCaches(window.localStorage);
+    clearAiDerivedClientCaches(runtime.cacheStorage, runtime.synthesisSession);
     try {
       const nextStatus = await client.disconnect();
       setStatus(nextStatus);
@@ -96,7 +97,7 @@ export function AiAccessProvider({ children }: PropsWithChildren) {
     } finally {
       setPending(false);
     }
-  }, [client]);
+  }, [client, runtime.cacheStorage, runtime.synthesisSession]);
 
   const value = useMemo<AiAccessContextValue>(() => ({
     status,
