@@ -40,6 +40,11 @@ interface WorkspaceRuntimeValue {
   synthesisSession: GlobalSynthesisSession;
 }
 
+type WorkspaceRuntimeResources = Omit<
+  WorkspaceRuntimeValue,
+  "mode" | "authenticated" | "enterAccount"
+>;
+
 interface WorkspaceRuntimeProviderProps extends PropsWithChildren {
   mode: WorkspaceRuntimeMode;
   authenticated: boolean;
@@ -54,13 +59,12 @@ export function WorkspaceRuntimeProvider({
   mode,
   onEnterAccount,
 }: WorkspaceRuntimeProviderProps) {
-  const runtime = useMemo<WorkspaceRuntimeValue>(() => {
+  // BrowserRouter navigation may replace action callbacks. Keep the demo's
+  // in-memory reports and clients keyed only to the selected workspace mode.
+  const resources = useMemo<WorkspaceRuntimeResources>(() => {
     const cacheStorage = mode === "demo" ? createMemoryStorage() : getBrowserStorage();
     const fetcher = mode === "demo" ? createDemoApiFetch() : globalThis.fetch.bind(globalThis);
     return {
-      mode,
-      authenticated,
-      enterAccount: onEnterAccount,
       projectClient: new ProjectApiClient(fetcher),
       projectReportClient: new ProjectReportApiClient(fetcher),
       globalInsightsClient: new GlobalInsightsApiClient(fetcher),
@@ -68,7 +72,13 @@ export function WorkspaceRuntimeProvider({
       cacheStorage,
       synthesisSession: new GlobalSynthesisSession(),
     };
-  }, [authenticated, mode, onEnterAccount]);
+  }, [mode]);
+  const runtime = useMemo<WorkspaceRuntimeValue>(() => ({
+    mode,
+    authenticated,
+    enterAccount: onEnterAccount,
+    ...resources,
+  }), [authenticated, mode, onEnterAccount, resources]);
 
   return (
     <WorkspaceRuntimeContext.Provider value={runtime}>

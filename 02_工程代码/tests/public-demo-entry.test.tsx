@@ -57,6 +57,7 @@ test("anonymous demo reuses the complete product workspace and removes the diver
   const shellSource = readFileSync(new URL("../frontend/src/app/AppShell.tsx", import.meta.url), "utf8");
   const settingsSource = readFileSync(new URL("../frontend/src/pages/Settings/SettingsPage.tsx", import.meta.url), "utf8");
   const dataSourceSource = readFileSync(new URL("../frontend/src/pages/Project/ProjectDataSourcePanel.tsx", import.meta.url), "utf8");
+  const runtimeSource = readFileSync(new URL("../frontend/src/features/workspace/WorkspaceRuntimeContext.tsx", import.meta.url), "utf8");
 
   assert.match(appSource, /runtime\.mode === "demo" \? <ApplicationWorkspace/u);
   assert.doesNotMatch(appSource, /PublicDemoWorkspace/u);
@@ -68,6 +69,9 @@ test("anonymous demo reuses the complete product workspace and removes the diver
   assert.match(settingsSource, /匿名体验不消耗 Token/u);
   assert.match(dataSourceSource, /演示账号为只读模式/u);
   assert.match(dataSourceSource, /currentUserRole === "owner" && !readOnly/u);
+  assert.match(runtimeSource, /const resources = useMemo<WorkspaceRuntimeResources>/u);
+  assert.match(runtimeSource, /synthesisSession: new GlobalSynthesisSession\(\),\s*\};\s*\}, \[mode\]\);/u);
+  assert.doesNotMatch(runtimeSource, /\}, \[authenticated, mode, onEnterAccount\]\);/u);
 });
 
 test("public README links the Chinese self-hosting entry and includes macOS guidance", () => {

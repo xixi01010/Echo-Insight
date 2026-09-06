@@ -86,8 +86,37 @@ test("anonymous demo allowlist exposes five synthetic projects through the compl
     }
     const reportBody = requireRecord(report.body);
     const analysis = requireRecord(reportBody.analysis);
+    const riskSignals = requireRecordArray(analysis, "riskSignals");
+    const riskContexts = requireRecordArray(reportBody, "riskContexts");
+    const aiReport = requireRecord(reportBody.aiReport);
+    const aiRisks = requireRecordArray(aiReport, "risks");
     assert.equal(analysis.healthScore, expected.healthScore);
-    assert.equal(requireArray(analysis.riskSignals).length, expected.riskCount);
+    assert.equal(riskSignals.length, expected.riskCount);
+    assert.equal(riskContexts.length, expected.riskCount);
+    assert.equal(reportBody.aiStatus, "available");
+    assert.equal(aiRisks.length, expected.riskCount);
+
+    for (const signal of riskSignals) {
+      const signalId = requireNonEmptyString(signal.signalId);
+      const context = riskContexts.find((item) => item.signalId === signalId);
+      assert.ok(context, `Missing demo risk context for ${signalId}.`);
+      assert.ok(requireStringArray(context.factualEvidence).length > 0);
+
+      const aiRisk = aiRisks.find((item) => (
+        item.id === signalId
+        || requireStringArray(item.evidenceRefs).includes(signalId)
+      ));
+      assert.ok(aiRisk, `Missing demo AI explanation for ${signalId}.`);
+      requireNonEmptyString(aiRisk.title);
+      requireNonEmptyString(aiRisk.reason);
+      requireNonEmptyString(aiRisk.impact);
+      assert.ok(requireStringArray(aiRisk.suggestedActions).every((item) => item.trim().length > 0));
+      assert.ok(requireStringArray(aiRisk.suggestedActions).length > 0);
+    }
+
+    const repeatedReport = await requestJson("POST", `/api/demo/projects/${expected.id}/report`);
+    assert.equal(repeatedReport.response.status, 200);
+    assert.deepEqual(repeatedReport.body, report.body);
   }
 
   const insights = await requestJson("GET", "/api/demo/insights");
@@ -210,4 +239,16 @@ function requireRecordArray(value: unknown, key: string): Record<string, unknown
   const items = requireArray(requireRecord(value)[key]);
   assert.ok(items.every((item) => item && typeof item === "object" && !Array.isArray(item)));
   return items as Record<string, unknown>[];
+}
+
+function requireNonEmptyString(value: unknown): string {
+  assert.ok(typeof value === "string");
+  assert.ok(value.trim().length > 0);
+  return value;
+}
+
+function requireStringArray(value: unknown): string[] {
+  assert.ok(Array.isArray(value));
+  assert.ok(value.every((item) => typeof item === "string"));
+  return value as string[];
 }
