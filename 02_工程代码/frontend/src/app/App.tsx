@@ -28,7 +28,11 @@ import { AiSetupBoundary } from "../features/ai-access/AiSetupBoundary";
 import { advanceClientCacheEpoch } from "../features/ai-access/client-cache-epoch";
 import { useDelayedLoadingVisibility } from "../hooks/useDelayedLoadingVisibility";
 import { WorkspacePreview } from "./WorkspacePreview";
-import { resolveApplicationEntryExperience } from "./entry-experience";
+import { EntryChoiceScreen } from "./EntryChoiceScreen";
+import {
+  removeDemoModeFromSearch,
+  resolveApplicationEntryExperience,
+} from "./entry-experience";
 import {
   WorkspaceRuntimeProvider,
   useWorkspaceRuntime,
@@ -86,7 +90,30 @@ function AuthenticatedApplication() {
     void auth.startFeishuLogin();
   }, [auth, authenticated, navigate]);
 
-  if (entryExperience === "loading") return <AuthLoadingScreen />;
+  const chooseDemo = useCallback(() => {
+    advanceClientCacheEpoch();
+    writeDemoOverride(true);
+    setDemoOverride(true);
+    navigate({
+      pathname: "/",
+      search: removeDemoModeFromSearch(location.search),
+      hash: location.hash,
+    }, { replace: true });
+  }, [location.hash, location.search, navigate]);
+
+  if (entryExperience === "choice") {
+    return (
+      <EntryChoiceScreen
+        authenticated={authenticated}
+        error={auth.error}
+        loginAvailable={authenticated || auth.status?.mode === "feishu"}
+        loginLoading={auth.loading}
+        onChooseDemo={chooseDemo}
+        onEnterAccount={enterAccount}
+      />
+    );
+  }
+  if (entryExperience === "loading" && !demoOverride) return <AuthLoadingScreen />;
 
   const mode = entryExperience === "demo" || demoOverride ? "demo" : "account";
   return (

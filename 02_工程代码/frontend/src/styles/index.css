@@ -513,6 +513,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .identity-entry-card h1 { color: #152033; font-size: 29px; letter-spacing: -.035em; }
 .identity-entry-card > p:not(.eyebrow) { color: #617087; }
 .identity-entry-card__action { margin-top: 18px; width: 100%; }
+.entry-choice-options { display: grid; gap: 12px; margin-top: 22px; }
+.entry-choice-option { align-items: flex-start; flex-direction: column; min-height: 74px; text-align: left; width: 100%; }
+.entry-choice-option strong { font-size: 14px; }
+.entry-choice-option span { font-size: 12px; font-weight: 500; line-height: 1.5; opacity: .82; }
 .identity-entry-card small { color: #8a97a9; display: block; margin-top: 14px; text-align: center; }
 .identity-entry-card--loading { align-items: center; display: flex; gap: 12px; justify-content: center; padding: 26px; }
 .identity-entry-card--loading p { margin: 0 !important; }

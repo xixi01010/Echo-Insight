@@ -1,3 +1,5 @@
+import React from "react";
+
 export function WorkspacePreview() {
   return (
     <div className="identity-preview" aria-hidden="true">

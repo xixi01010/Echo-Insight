@@ -40,12 +40,12 @@ Echo Insight is not an agent that automatically operates your projects. It does 
 
 | Path | Best for | Entry point | What you need |
 | --- | --- | --- | --- |
-| **Online product experience** | Users who want to understand the complete product first | [Open Echo Insight](https://echo-insight.pages.dev/?mode=demo) | No login or API key; opens a read-only demo account with five projects at different health levels |
+| **Online product experience** | Users who want to understand the complete product first | [Open Echo Insight](https://echo-insight.pages.dev/?mode=demo) | Choose the full demo or Feishu sign-in first; the demo needs no login or API key |
 | **Self-hosted deployment** | Teams or developers who want control over data, models, and runtime | [Start with the installation guide](./README.en.md#installation-guide) | Node.js, a Feishu custom app, your own AI Provider API key, HTTPS, and persistent storage |
 
 ### Online product experience guide
 
-1. Open the [Echo Insight online product experience](https://echo-insight.pages.dev/?mode=demo). It opens the complete read-only demo account without a login.
+1. Open the [Echo Insight online product experience](https://echo-insight.pages.dev/?mode=demo), then choose **Enter the complete demo account** or **Sign in with Feishu and use my projects**.
 2. Switch among five synthetic projects with different health levels, then explore the project overview, Risk Center, AI Report, all seven source types, cross-project AI Insights, and Settings. Production deterministic rules calculate health and risk in real time; AI explanations are pre-generated examples, so the page never calls an external model.
 3. Only when you want to see your own projects, choose **Sign in and use my projects** and complete Feishu authorization.
 4. On first entry to the real workspace, connect your own DeepSeek or Qwen key, or skip AI and keep deterministic health and risk rules only.
@@ -102,23 +102,25 @@ The demo account and real workspace are isolated data domains. The demo needs no
 
 ```mermaid
 flowchart LR
-    A[Open the online entry] --> B[Complete no-login demo account]
-    B --> C{View my real projects?}
-    C -- No --> B
-    C -- Yes --> D[Feishu login]
-    D --> E[Create a project / join after permission verification]
-    E --> F[Owner explicitly selects data sources]
-    F --> G[Identity and permission filtering]
-    G --> H[Multi-source normalization and aggregation]
-    H --> I[Confirmed facts]
-    H --> J[Unconfirmed signals / source conflicts]
-    I --> K[Deterministic health and risk rules]
-    K --> L[Health / risk facts / rule evidence]
-    L --> M[Optional AI explanations and suggested actions]
-    J --> N[Displayed separately; excluded from formal scoring]
-    M --> O[Project workspace and cross-project insights]
-    N --> O
-    O --> P[Human decision]
+    A[Open the online entry] --> B{Choose an experience}
+    B -- Full demo --> C[Complete no-login demo account]
+    B -- Sign in --> E[Feishu login]
+    C --> D{View my real projects?}
+    D -- No --> C
+    D -- Yes --> E
+    E --> F[Create a project / join after permission verification]
+    F --> G[Owner explicitly selects data sources]
+    G --> H[Identity and permission filtering]
+    H --> I[Multi-source normalization and aggregation]
+    I --> J[Confirmed facts]
+    I --> K[Unconfirmed signals / source conflicts]
+    J --> L[Deterministic health and risk rules]
+    L --> M[Health / risk facts / rule evidence]
+    M --> N[Optional AI explanations and suggested actions]
+    K --> O[Displayed separately; excluded from formal scoring]
+    N --> P[Project workspace and cross-project insights]
+    O --> P
+    P --> Q[Human decision]
 ```
 
 The pipeline keeps four invariants: permission filtering precedes analysis; deterministic rules precede AI; AI cannot change facts or scores; and an external-model failure is never disguised as success.

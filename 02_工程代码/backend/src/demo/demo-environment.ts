@@ -50,13 +50,10 @@ import {
 import { JsonProjectRepository, ProjectService } from "../project-service/index.js";
 
 export const DEMO_USER_ID = "echo-demo-user";
+export const DEMO_NOW = new Date("2026-09-06T10:00:00.000+08:00");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEMO_BASE_NOW = (() => {
-  const value = new Date();
-  value.setMinutes(0, 0, 0);
-  return value.getTime();
-})();
+const DEMO_BASE_NOW = DEMO_NOW.getTime();
 
 function dateAt(offsetDays: number, hour = 9, minute = 0): string {
   const value = new Date(DEMO_BASE_NOW + offsetDays * DAY_MS);
@@ -204,7 +201,7 @@ export interface DemoEnvironment {
 
 export async function createDemoEnvironment(runtimeDirectory: string, reset = true): Promise<DemoEnvironment> {
   assertDemoRuntimeDirectory(runtimeDirectory);
-  const now = new Date();
+  const now = new Date(DEMO_NOW);
   if (reset) await rm(runtimeDirectory, { recursive: true, force: true });
   await mkdir(runtimeDirectory, { recursive: true });
   const projectStorePath = resolve(runtimeDirectory, "projects.json");

@@ -56,7 +56,7 @@ export function AiSetupBoundary({ children }: PropsWithChildren) {
             <li>连接后，进入已配置项目、首次打开 AI 洞察或主动刷新时可能发起模型调用；服务端会限制账号级频率与并发。</li>
           </ul>
           <AiConnectionForm />
-          <Link className="secondary-action ai-demo-action" to="/?mode=demo">
+          <Link className="secondary-action ai-demo-action" to="/demo">
             先查看不登录、不调用模型的虚拟项目演示
           </Link>
           <button className="text-action ai-skip-action" disabled={aiAccess.pending} onClick={() => void aiAccess.skip()} type="button">

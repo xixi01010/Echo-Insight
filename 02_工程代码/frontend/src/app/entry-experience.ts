@@ -1,4 +1,4 @@
-export type ApplicationEntryExperience = "loading" | "demo" | "workspace";
+export type ApplicationEntryExperience = "loading" | "choice" | "demo" | "workspace";
 
 export function resolveApplicationEntryExperience({
   authenticated,
@@ -11,9 +11,15 @@ export function resolveApplicationEntryExperience({
   pathname: string;
   search: string;
 }): ApplicationEntryExperience {
-  const requestedDemo = pathname === "/demo"
-    || new URLSearchParams(search).get("mode") === "demo";
-  if (requestedDemo) return "demo";
+  if (new URLSearchParams(search).get("mode") === "demo") return "choice";
+  if (pathname === "/demo") return "demo";
   if (loading) return "loading";
   return authenticated ? "workspace" : "demo";
+}
+
+export function removeDemoModeFromSearch(search: string): string {
+  const searchParams = new URLSearchParams(search);
+  searchParams.delete("mode");
+  const nextSearch = searchParams.toString();
+  return nextSearch ? `?${nextSearch}` : "";
 }

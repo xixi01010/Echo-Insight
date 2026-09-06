@@ -94,7 +94,7 @@ export function ProjectsPage() {
             {demo ? <button className="primary-action" onClick={runtime.enterAccount} type="button">登录并使用我的项目</button> : <>
               <button className="primary-action" onClick={() => setModal("create")} type="button"><AppIcon name="plus" />创建项目</button>
               <button className="secondary-action" onClick={() => setModal("join")} type="button"><AppIcon name="join" />加入项目</button>
-              <Link className="secondary-action" to="/?mode=demo"><AppIcon name="insights" />查看虚拟项目演示</Link>
+              <Link className="secondary-action" to="/demo"><AppIcon name="insights" />查看虚拟项目演示</Link>
             </>}
           </div>
         </section>
